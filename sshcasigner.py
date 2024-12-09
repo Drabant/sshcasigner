@@ -127,8 +127,11 @@ def make_krl(output_file=None, force=False):
     conn.close()
 
     if revoked_ids:
-        cmd = ["ssh-keygen", "-k", "-f", output_file] + revoked_ids
-        subprocess.run(cmd)
+        # Create the input for ssh-keygen from revoked_ids as serial lines
+        stdin_data = "".join(f"serial:{rid}\n" for rid in revoked_ids)
+
+        cmd = ["ssh-keygen", "-k", "-s", CA_KEY + ".pub", "-f", output_file, "-"]
+        subprocess.run(cmd, input=stdin_data.encode(), check=True)
         print(f"KRL file generated: {output_file}")
     else:
         print("No revoked keys found. KRL file not generated.")
@@ -147,8 +150,11 @@ def update_krl(output_file=None):
     conn.close()
 
     if revoked_ids:
-        cmd = ["ssh-keygen", "-u", "-f", output_file] + revoked_ids
-        subprocess.run(cmd)
+        # Create the input for ssh-keygen from revoked_ids as serial lines
+        stdin_data = "".join(f"serial:{rid}\n" for rid in revoked_ids)
+
+        cmd = ["ssh-keygen", "-k", "-u", "-s", CA_KEY + ".pub", "-f", output_file, "-"]
+        subprocess.run(cmd, input=stdin_data.encode(), check=True)
         print(f"KRL file updated: {output_file}")
     else:
         print("No revoked keys found. KRL file not updated.")
